@@ -1,6 +1,9 @@
-﻿using Scheduler.Data.Abstract;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Scheduler.Data.Abstract;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Scheduler.Data.Repositories
@@ -29,52 +32,71 @@ namespace Scheduler.Data.Repositories
 
         public IEnumerable<T> AllIncluding(params Expression<Func<T, object>>[] includeProperties)
         {
-            throw new NotImplementedException();
+            IQueryable<T> query = _context.Set<T>();
+            foreach(var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+            return query.AsEnumerable();
         }
 
         public T GetSingle(int id)
         {
-            throw new NotImplementedException();
+            return _context.Set<T>().FirstOrDefault(x => x.Id == id);
         }
 
-        public T GetSingle(Expression<Func<T, bool>> Predicate)
+        public T GetSingle(Expression<Func<T, bool>> predicate)
         {
-            throw new NotImplementedException();
+            return _context.Set<T>().FirstOrDefault(predicate);
         }
 
-        public T GetSingle(Expression<Func<T, bool>> Predicate, params Expression<Func<T, object>>[] includeProperties)
+        public T GetSingle(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties)
         {
-            throw new NotImplementedException();
+            IQueryable<T> query = _context.Set<T>();
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+
+            return query.Where(predicate).FirstOrDefault();
         }
 
-        public IEnumerable<T> FindBy(Expression<Func<T, bool>> Predicate)
+        public IEnumerable<T> FindBy(Expression<Func<T, bool>> predicate)
         {
-            throw new NotImplementedException();
+            return _context.Set<T>().Where(predicate);
         }
 
         public void Add(T entity)
         {
-            throw new NotImplementedException();
+            EntityEntry dbEntityEntry = _context.Entry<T>(entity);
+            _context.Set<T>().Add(entity);
         }
 
         public void Update(T entity)
         {
-            throw new NotImplementedException();
+            EntityEntry dbEntityEntry = _context.Entry<T>(entity);
+            dbEntityEntry.State = EntityState.Modified;
         }
 
         public void Delete(T entity)
         {
-            throw new NotImplementedException();
+            EntityEntry dbEntityEntry = _context.Entry<T>(entity);
+            dbEntityEntry.State = EntityState.Deleted;
         }
 
         public void DeleteWhere(Expression<Func<T, bool>> Predicate)
         {
-            throw new NotImplementedException();
+            IEnumerable<T> entities = _context.Set<T>().Where(Predicate);
+
+            foreach(var entity in entities)
+            {
+                _context.Entry<T>(entity).State = EntityState.Deleted;
+            }
         }
 
         public void Commit()
         {
-            throw new NotImplementedException();
+            _context.SaveChanges();
         }
 
 
